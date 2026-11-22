@@ -17,6 +17,9 @@ class Payments:
         order = self.conn.execute("SELECT * FROM orders WHERE id = ?", (event["order_id"],)).fetchone()
         if order is None:
             raise PaymentError(f"payment for unknown order {event['order_id']}")
+        existing = self.conn.execute("SELECT 1 FROM payments WHERE event_id = ?", (event["id"],)).fetchone()
+        if existing is not None:
+            return order["status"]
         if order["status"] == "cancelled":
             raise PaymentError(f"order {order['id']} is cancelled")
         self.conn.execute(
