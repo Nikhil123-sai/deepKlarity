@@ -22,6 +22,8 @@ class Payments:
             return order["status"]
         if order["status"] == "cancelled":
             raise PaymentError(f"order {order['id']} is cancelled")
+        if order["status"] in ("paid", "shipped") or self.paid_cents(order["id"]) >= order["total_cents"]:
+            raise PaymentError(f"order {order['id']} is already paid")
         self.conn.execute(
             "INSERT INTO payments (order_id, event_id, amount_cents, received_at) VALUES (?, ?, ?, ?)",
             (order["id"], event["id"], event["amount_cents"], db.to_iso(now or db.utcnow())),
